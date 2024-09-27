@@ -1,0 +1,9 @@
+[submodule "frontend"]
+	path = frontend
+	url = git@github.com:net-escape/putong-oj-frontend.git
+[submodule "backend"]
+	path = backend
+	url = git@github.com:net-escape/putong-oj-backend.git
+[submodule "resolver"]
+	path = resolver
+	url = git@github.com:net-escape/putong-oj-judger.git

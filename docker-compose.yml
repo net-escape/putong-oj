@@ -1,0 +1,34 @@
+version: '2.1'
+
+services:
+  ptoj-db:
+    image: mongo:latest
+    container_name: ptoj-db
+    restart: always
+    volumes:
+      - ./resource/db:/data/db
+      - ./resource/backup:/data/backup
+
+  ptoj-redis:
+    image: redis:latest
+    container_name: ptoj-redis
+    restart: always
+
+  ptoj-app:
+    container_name: ptoj-app
+    build: .
+    environment:
+      - NODE_ENV=production
+      - dbURL=mongodb://ptoj-db:27017/oj
+      - redisURL=redis://ptoj-redis:6379
+    ports:
+      - '0.0.0.0:3000:3000'
+    volumes:
+      - ./resource/data:/app/data
+      - ./resource/logs:/app/logs
+    depends_on:
+      - ptoj-redis
+      - ptoj-db
+    restart: always
+    cap_add:
+      - SYS_PTRACE
