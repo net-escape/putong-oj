@@ -16,7 +16,9 @@ services:
 
   ptoj-app:
     container_name: ptoj-app
-    build: .
+    build:
+      context: .
+      dockerfile: app.dockerfile
     environment:
       - NODE_ENV=production
       - dbURL=mongodb://ptoj-db:27017/oj
@@ -29,6 +31,22 @@ services:
     depends_on:
       - ptoj-redis
       - ptoj-db
+    restart: always
+
+  ptoj-judger:
+    container_name: ptoj-judger
+    build:
+      context: .
+      dockerfile: judger.dockerfile
+    environment:
+      - NODE_ENV=production
+      - dbURL=mongodb://ptoj-db:27017/oj
+      - redisURL=redis://ptoj-redis:6379
+    volumes:
+      - ./resource/data:/app/data
+      - ./resource/logs:/app/logs
+    depends_on:
+      - ptoj-app
     restart: always
     cap_add:
       - SYS_PTRACE

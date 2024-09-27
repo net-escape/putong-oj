@@ -1,6 +1,7 @@
 # Frontend
 FROM node:16 AS frontend_builder
 WORKDIR /app
+
 COPY frontend/ .
 RUN npm i -g pnpm@latest-6 && \
     pnpm install && pnpm run build
@@ -18,13 +19,11 @@ RUN npm i -g pnpm@latest-6 && \
     pnpm install -P
 
 COPY backend/ .
-COPY manage.js .
 COPY --from=frontend_builder /app/dist /app/public
 
-COPY resolver/ services/Judger
-RUN cd services && make -C Judger
+COPY manage.js .
+RUN ROLE=app node manage.js
 
 EXPOSE 3000
-RUN node manage.js
 
 CMD ["npx", "pm2", "start", "pm2.config.json", "--no-daemon"]

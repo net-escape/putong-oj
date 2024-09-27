@@ -5,8 +5,6 @@ const process = require('node:process')
 const fse = require('fs-extra')
 const range = require('lodash.range')
 // DO not upgrade execa to v6.0.0 as it is esm module
-const { command: execaCommand } = require('execa')
-const fetch = require('node-fetch')
 const config = require('./config')
 
 // download and initialize the judgers
@@ -14,59 +12,28 @@ const config = require('./config')
 
 const logDir = resolve(__dirname, 'logs')
 
-const baseConfig = {
-  apps: [
-    {
-      name: 'app',
-      script: resolve(__dirname, 'app.js'),
-      out_file: resolve(logDir, 'app.out.log'),
-      error_file: resolve(logDir, 'app.err.log'),
-      log_date_format: 'YYYY-MM-DD HH:mm:ss X',
-      merge_logs: true,
-      restart_delay: 500,
-      env: {
-        NODE_ENV: 'production',
-      },
-    },
-    {
-      name: 'updater',
-      script: resolve(__dirname, 'services', 'updater.js'),
-      out_file: resolve(logDir, 'updater.out.log'),
-      error_file: resolve(logDir, 'updater.err.log'),
-      log_date_format: 'YYYY-MM-DD HH:mm:ss X',
-      merge_logs: true,
-      env: {
-        NODE_ENV: 'production',
-      },
-    },
-  ],
-}
+// Container Role: 'app' or 'judger'
+const container_role = process.env.ROLE || 'app'
 
-if (config.mail && config.mail.enable) {
-  baseConfig.apps.push({
-    name: 'mailer',
-    script: resolve(__dirname, 'services', 'mailer.js'),
-    out_file: resolve(logDir, 'mailer.out.log'),
-    error_file: resolve(logDir, 'mailer.err.log'),
-    log_date_format: 'YYYY-MM-DD HH:mm:ss X',
-    merge_logs: true,
-    env: {
-      NODE_ENV: 'production',
-    },
-  })
-}
+// if (config.mail && config.mail.enable) {
+//   baseConfig.apps.push({
+//     name: 'mailer',
+//     script: resolve(__dirname, 'services', 'mailer.js'),
+//     out_file: resolve(logDir, 'mailer.out.log'),
+//     error_file: resolve(logDir, 'mailer.err.log'),
+//     log_date_format: 'YYYY-MM-DD HH:mm:ss X',
+//     merge_logs: true,
+//     env: {
+//       NODE_ENV: 'production',
+//     },
+//   })
+// }
 
-async function judgeSetup () {
+async function judgerSetup() {
   let judgers = +config.judgers
   if (!(judgers >= 1 && judgers <= 10)) { judgers = 1 }
 
   const judgersDir = resolve(__dirname, 'services')
-
-  // await fse.emptyDir(resolve(judgersDir, 'Judger'))
-
-  // // 下载最新版的 judger
-  // await execaCommand(`git clone https://github.com/acm309/Judger ${resolve(judgersDir, 'Judger')}`)
-  // await execaCommand(`make -C ${resolve(judgersDir, 'Judger')}`)
 
   await Promise.all([
     fse.copy(resolve(judgersDir, 'Judger', 'Judge'), resolve(judgersDir, 'node-0', 'Judge')),
@@ -81,7 +48,7 @@ async function judgeSetup () {
       )),
   )
 
-  const pm2config = baseConfig
+  const pm2config = { apps: [] }
 
   range(judgers).forEach(i =>
     pm2config.apps.push({
@@ -101,22 +68,42 @@ async function judgeSetup () {
   return fse.outputJSON('pm2.config.json', pm2config, { spaces: 2, EOL: '\n' })
 }
 
-async function staticFilesSetUp () {
-  // const res = await fetch('https://api.github.com/repos/acm309/PutongOJ-FE/releases')
-  // const json = await res.json()
-  // const url = json[0].assets[0].browser_download_url
-  // await execaCommand(`wget ${url} -O dist.zip`)
-  // await execaCommand('unzip -o dist.zip -d dist')
-  // await execaCommand('cp -r dist/* public/', {
-  //   shell: true,
-  // })
+async function appSetup() {
+
+  const pm2config = {
+    apps: [
+      {
+        name: 'app',
+        script: resolve(__dirname, 'app.js'),
+        out_file: resolve(logDir, 'app.out.log'),
+        error_file: resolve(logDir, 'app.err.log'),
+        log_date_format: 'YYYY-MM-DD HH:mm:ss X',
+        merge_logs: true,
+        restart_delay: 500,
+        env: {
+          NODE_ENV: 'production',
+        },
+      },
+      {
+        name: 'updater',
+        script: resolve(__dirname, 'services', 'updater.js'),
+        out_file: resolve(logDir, 'updater.out.log'),
+        error_file: resolve(logDir, 'updater.err.log'),
+        log_date_format: 'YYYY-MM-DD HH:mm:ss X',
+        merge_logs: true,
+        env: {
+          NODE_ENV: 'production',
+        },
+      },
+    ],
+  }
+
+  return fse.outputJSON('pm2.config.json', pm2config, { spaces: 2, EOL: '\n' })
 }
 
-function main () {
-  return Promise.all([
-    judgeSetup(),
-    staticFilesSetUp(),
-  ])
+function main() {
+  return Promise.all([(container_role == 'app') ?
+    appSetup() : judgerSetup()])
 }
 
 main()
