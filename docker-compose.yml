@@ -8,11 +8,15 @@ services:
     volumes:
       - ./resource/db:/data/db
       - ./resource/backup:/data/backup
+    networks:
+      - ptoj-internal
 
   ptoj-redis:
     image: redis:latest
     container_name: ptoj-redis
     restart: always
+    networks:
+      - ptoj-internal
 
   ptoj-app:
     container_name: ptoj-app
@@ -32,6 +36,9 @@ services:
       - ptoj-redis
       - ptoj-db
     restart: always
+    networks:
+      - ptoj-internal
+      - ptoj-public
 
   ptoj-judger:
     container_name: ptoj-judger
@@ -50,3 +57,11 @@ services:
     restart: always
     cap_add:
       - SYS_PTRACE
+    networks:
+      - ptoj-internal
+
+networks:
+  ptoj-internal:
+    internal: true
+  ptoj-public:
+    driver: bridge

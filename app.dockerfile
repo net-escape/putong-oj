@@ -2,9 +2,13 @@
 FROM node:16 AS frontend_builder
 WORKDIR /app
 
-COPY frontend/ .
+COPY frontend/package.json .
+COPY frontend/pnpm-lock.yaml .
 RUN npm i -g pnpm@latest-6 && \
-    pnpm install && pnpm run build
+    pnpm install
+
+COPY frontend/ .
+RUN pnpm run build
 
 # Backend
 FROM node:16
