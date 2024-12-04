@@ -1,5 +1,3 @@
-version: '2.1'
-
 services:
   ptoj-db:
     image: mongo:latest
@@ -9,7 +7,23 @@ services:
       - ./resource/db:/data/db
       - ./resource/backup:/data/backup
     networks:
-      - ptoj-internal
+      - ptoj
+    profiles:
+      - prod
+  
+  ptoj-db-dev:
+    image: mongo:latest
+    container_name: ptoj-db
+    restart: always
+    volumes:
+      - ./resource/db:/data/db
+      - ./resource/backup:/data/backup
+    ports:
+      - 27017:27017
+    networks:
+      - ptoj
+    profiles:
+      - dev
 
   ptoj-redis:
     image: redis:latest
@@ -18,7 +32,22 @@ services:
     volumes:
       - ./resource/cache:/data
     networks:
-      - ptoj-internal
+      - ptoj
+    profiles:
+      - prod
+
+  ptoj-redis-dev:
+    image: redis:latest
+    container_name: ptoj-redis
+    restart: always
+    volumes:
+      - ./resource/cache:/data
+    ports:
+      - 6379:6379
+    networks:
+      - ptoj
+    profiles:
+      - dev
 
   ptoj-app:
     container_name: ptoj-app
@@ -39,8 +68,9 @@ services:
       - ptoj-db
     restart: always
     networks:
-      - ptoj-internal
-      - ptoj-public
+      - ptoj
+    profiles:
+      - prod
 
   ptoj-judger:
     container_name: ptoj-judger
@@ -60,10 +90,33 @@ services:
     cap_add:
       - SYS_PTRACE
     networks:
-      - ptoj-internal
+      - ptoj
+    profiles:
+      - prod
+  
+  ptoj-judger-dev:
+    container_name: ptoj-judger
+    build:
+      context: .
+      dockerfile: judger.dockerfile
+    environment:
+      - NODE_ENV=development
+      - dbURL=mongodb://ptoj-db-dev:27017/oj
+      - redisURL=redis://ptoj-redis-dev:6379
+    volumes:
+      - ./resource/data:/app/data
+      - ./resource/logs:/app/logs
+    depends_on:
+      - ptoj-db-dev
+      - ptoj-redis-dev
+    restart: always
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - ptoj
+    profiles:
+      - dev
 
 networks:
-  ptoj-internal:
-    internal: true
-  ptoj-public:
+  ptoj:
     driver: bridge
