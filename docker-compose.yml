@@ -104,8 +104,8 @@ services:
       - dbURL=mongodb://ptoj-db-dev:27017/oj
       - redisURL=redis://ptoj-redis-dev:6379
     volumes:
-      - ./resource/data:/app/data
-      - ./resource/logs:/app/logs
+      - ./backend/data:/app/data
+      - ./backend/logs:/app/logs
     depends_on:
       - ptoj-db-dev
       - ptoj-redis-dev
