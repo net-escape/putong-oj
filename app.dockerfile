@@ -1,10 +1,10 @@
 # Frontend
-FROM node:16 AS frontend_builder
+FROM node:22 AS frontend_builder
 WORKDIR /app
 
 COPY frontend/package.json .
 COPY frontend/pnpm-lock.yaml .
-RUN npm i -g pnpm@latest-6 && \
+RUN npm i -g pnpm@latest-9 && \
     pnpm install
 
 COPY frontend/ .

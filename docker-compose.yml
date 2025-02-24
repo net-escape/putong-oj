@@ -4,8 +4,9 @@ services:
     container_name: ptoj-db
     restart: always
     volumes:
-      - ./resource/db:/data/db
-      - ./resource/backup:/data/backup
+      - ./resource/db/db:/data/db
+      - ./resource/db/backup:/data/backup
+      - ./resource/db/config:/data/configdb
     networks:
       - ptoj
     profiles:
@@ -13,11 +14,12 @@ services:
   
   ptoj-db-dev:
     image: mongo:latest
-    container_name: ptoj-db
+    container_name: ptoj-db-dev
     restart: always
     volumes:
-      - ./resource/db:/data/db
-      - ./resource/backup:/data/backup
+      - ./resource/dev/db:/data/db
+      - ./resource/dev/backup:/data/backup
+      - ./resource/dev/config:/data/configdb
     ports:
       - 27017:27017
     networks:
@@ -38,7 +40,7 @@ services:
 
   ptoj-redis-dev:
     image: redis:latest
-    container_name: ptoj-redis
+    container_name: ptoj-redis-dev
     restart: always
     volumes:
       - ./resource/cache:/data
@@ -112,6 +114,16 @@ services:
     restart: always
     cap_add:
       - SYS_PTRACE
+    networks:
+      - ptoj
+    profiles:
+      - dev
+  
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - 5540:5540
     networks:
       - ptoj
     profiles:
