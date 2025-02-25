@@ -30,4 +30,8 @@ RUN ROLE=app node manage.js
 
 EXPOSE 3000
 
+VOLUME /app/data
+VOLUME /app/logs
+VOLUME /app/public/uploads
+
 CMD ["npx", "pm2", "start", "pm2.config.json", "--no-daemon"]
