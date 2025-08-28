@@ -8,16 +8,16 @@ import { useRootStore } from '@/store'
 import { timeDiffPretty, timePretty } from '@/util/formate'
 import { useHumanLanguage } from '@/util/helper'
 
-const { locale, t } = useI18n()
+const { locale } = useI18n()
 const rootStore = useRootStore()
 const { website: backend, currentTime, timeDiff } = $(storeToRefs(rootStore))
 
 const serverTime = $computed(() =>
   Number.isNaN(timeDiff)
-    ? t('oj.syncing')
+    ? 'Syncing...'
     : `${timePretty(currentTime)} (${timeDiffPretty(timeDiff)})`)
 const frontend = {
-  buildSHA: import.meta.env.VITE_BUILD_SHA || t('oj.unknown'),
+  buildSHA: import.meta.env.VITE_BUILD_SHA || 'unknown',
   buildTime: Number.parseInt(import.meta.env.VITE_BUILD_TIME) || Date.now(),
 }
 
@@ -38,41 +38,41 @@ function langSelected (lang: string) {
     <Footer class="layout-footer">
       <RadioGroup v-model="selectedLang" type="button" size="small" class="lang-radio-group" @on-change="langSelected">
         <Radio label="zh-CN" class="lang-radio">
-          {{ t('oj.chinese_simplified') }}
+          简体中文
         </Radio>
         <Radio label="en-US" class="lang-radio">
-          {{ t('oj.english') }}
+          English
         </Radio>
       </RadioGroup>
-      <p>{{ t('oj.server_time') }} {{ serverTime }}</p>
+      <p>Server Time: {{ serverTime }}</p>
       <Poptip trigger="hover">
         <p>
-          <strong>{{ t('oj.putong_oj') }}</strong> by
+          <strong>Putong OJ</strong> by
           <a href="https://github.com/acm309" target="_blank" class="github-link">
             acm309
             <Icon type="logo-github" class="github-icon" />
           </a>.
           <br>
-          {{ t('oj.source_code_under') }}
+          The source code is under the
           <a href="https://github.com/acm309/PutongOJ/blob/master/LICENSE" target="_blank" class="license-link">
-            {{ t('oj.mit_license') }}
+            MIT License
           </a>.
         </p>
         <template #content>
           <Space direction="vertical">
             <div>
               <div class="component-version">
-                <code><b>{{ t('oj.putong_oj_backend') }}</b></code>
+                <code><b>Putong OJ Backend</b></code>
                 <code>#{{ backend.buildSHA }}</code>
               </div>
-              <code>{{ t('oj.built_at') }} {{ timePretty(backend.buildTime) }}</code>
+              <code>Built at {{ timePretty(backend.buildTime) }}</code>
             </div>
             <div>
               <div class="component-version">
-                <code><b>{{ t('oj.putong_oj_frontend') }}</b></code>
+                <code><b>Putong OJ Frontend</b></code>
                 <code>#{{ frontend.buildSHA }}</code>
               </div>
-              <code>{{ t('oj.built_at') }} {{ timePretty(frontend.buildTime) }}</code>
+              <code>Built at {{ timePretty(frontend.buildTime) }}</code>
             </div>
           </Space>
         </template>
