@@ -239,5 +239,13 @@
   "pid": "PID",
   "sid": "SID",
   "judge": "Judge",
-  "language": "Language"
+  "language": "Language",
+  "submit_time": "Submit Time",
+  "problem_invalid": "Problem is invalid",
+  "contest_ended": "Contest Ended",
+  "begin": "Begin",
+  "end": "End",
+  "ready": "Ready",
+  "running": "Running",
+  "ended": "Ended"
 }
