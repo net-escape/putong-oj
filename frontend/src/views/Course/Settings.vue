@@ -45,7 +45,7 @@ function updateCourse () {
         submiting.value = false
       }
     } else {
-      message.warning(t('oj.form_not_valid'))
+      message.warning(t('oj.form_invalid'))
     }
   })
 }

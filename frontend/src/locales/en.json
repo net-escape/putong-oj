@@ -320,7 +320,6 @@
   "join_code_length": "Join code must be between 6 and 20 characters",
   "course_updated_successfully": "Course updated successfully.",
   "failed_to_update_course": "Failed to update course: {error}",
-  "form_not_valid": "Form is not valid, please check your input.",
   "rearrange_task_dispatched": "Rearrange task dispatched.",
   "sample_input_output_empty": "Sample input and output are both empty, testcase creation skipped!",
   "sample_testcase_created": "Successfully created sample data testcase!",

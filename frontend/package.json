@@ -31,7 +31,6 @@
     "i18n:sync": "npm run i18n:upload && npm run i18n:download"
   },
   "dependencies": {
-    "@vitejs/plugin-legacy": "^7.2.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vueuse/core": "^13.7.0",
     "axios": "^1.11.0",
@@ -47,7 +46,6 @@
     "pangu": "^4.0.7",
     "pinia": "^3.0.3",
     "stylus": "^0.64.0",
-    "terser": "^5.43.1",
     "vditor": "^3.11.1",
     "view-ui-plus": "^1.3.20",
     "vue": "3.5.19",
