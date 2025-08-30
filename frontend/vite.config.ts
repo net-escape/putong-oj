@@ -1,5 +1,6 @@
 // https://vitejs.dev/config/
 import path from 'node:path'
+import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -14,6 +15,7 @@ export default defineConfig({
     extensions: [ '.mjs', '.js', '.ts', '.json', '.vue' ],
   },
   plugins: [
+    legacy(),
     ReactivityTransform(),
     visualizer({ gzipSize: true }),
     vue(),

@@ -31,6 +31,7 @@
     "i18n:sync": "npm run i18n:upload && npm run i18n:download"
   },
   "dependencies": {
+    "@vitejs/plugin-legacy": "^7.2.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vueuse/core": "^13.7.0",
     "axios": "^1.11.0",
