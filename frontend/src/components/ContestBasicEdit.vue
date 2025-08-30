@@ -91,11 +91,11 @@ onMounted(async () => {
           {{ t('oj.private') }}
         </Option>
         <Option :value="encrypt.Password">
-          {{ t('oj.contest_password') }}
+          {{ t('oj.password') }}
         </Option>
       </Select>
     </FormItem>
-    <FormItem v-if="contest.encrypt === encrypt.Password" :label="t('oj.contest_password')">
+    <FormItem v-if="contest.encrypt === encrypt.Password" :label="t('oj.password')">
       <Input v-model="contest.argument" class="contest-form-item" type="password" password :placeholder="t('oj.enter_contest_password')" />
     </FormItem>
   </Form>

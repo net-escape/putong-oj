@@ -55,7 +55,7 @@ async function submitCheck () {
     if (!problem.in || !problem.out) {
       $Modal.confirm({
         title: t('oj.notice'),
-        content: `<p>${t('oj.sample_input_output_incomplete')}</p>`,
+        content: t('oj.sample_input_output_incomplete'),
         onOk: async () => {
           await submit()
         },
