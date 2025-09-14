@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "Root(根目录)",
+      "path": "."
+    },
+    {
+      "name": "Frontend(前端)",
+      "path": "frontend"
+    },
+    {
+      "name": "Backend(后端)",
+      "path": "backend"
+    },
+    {
+      "name": "Document(文档)",
+      "path": "document"
+    }
+  ],
+}
