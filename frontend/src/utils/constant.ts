@@ -28,6 +28,10 @@ export const language = {
   3: 'Java',
   4: 'Python 3',
   5: 'C++ 17',
+  // 6: 'PHP 8.2',
+  7: 'NodeJS',
+  // 8: 'TypeScript',
+  9: '文言'
 } as const
 
 export const languageList = Object.entries(language)
@@ -43,6 +47,10 @@ export const languageHighlight = {
   3: 'java',
   4: 'python',
   5: 'cpp',
+  6: 'php',
+  7: 'javascript',
+  8: 'typescript',
+  9: 'wenyan-lang'
 } as const
 
 export const color = {

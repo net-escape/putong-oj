@@ -4,6 +4,11 @@ import highlight from 'highlight.js/lib/core'
 import cpp from 'highlight.js/lib/languages/cpp'
 import java from 'highlight.js/lib/languages/java'
 import python from 'highlight.js/lib/languages/python'
+import php from 'highlight.js/lib/languages/php'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import wenyan from '@/utils/highlight/wenyan'
+
 import { storeToRefs } from 'pinia'
 import { Badge, Button, Card, Divider, Icon, Poptip, Space, Spin } from 'view-ui-plus'
 import { inject } from 'vue'
@@ -17,10 +22,15 @@ import { timePretty } from '@/utils/formate'
 import { onRouteQueryUpdate, testcaseUrl } from '@/utils/helper'
 import 'highlight.js/styles/atom-one-light.css'
 
+// TODO: 更换为 CodeMirror，提升编码与渲染体验
 highlight.registerLanguage('c', cpp)
 highlight.registerLanguage('cpp', cpp)
 highlight.registerLanguage('java', java)
 highlight.registerLanguage('python', python)
+highlight.registerLanguage('php', php)
+highlight.registerLanguage('javascript', javascript)
+highlight.registerLanguage('typescript', typescript)
+highlight.registerLanguage('wenyan-lang', wenyan)
 
 const { t } = useI18n()
 const result = $ref(constant.result)

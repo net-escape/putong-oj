@@ -19,7 +19,7 @@ const solutionStore = useSolutionStore()
 const { solution } = $(storeToRefs(solutionStore))
 const solutionStorage = $ref(useSolutionStorage())
 
-const languagesOrder: (keyof typeof language)[] = [ 2, 5, 1, 3, 4 ]
+const languagesOrder: (keyof typeof language)[] = [ 2, 5, 1, 3, 4, 7, 9 ]
 const languages = $computed(() =>
   languagesOrder.map(key => ({
     value: key,
