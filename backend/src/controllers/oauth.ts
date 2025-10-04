@@ -2,8 +2,9 @@ import type { Context } from 'koa'
 import type { OAuthEntityUserView } from '../models/OAuth'
 import type { UserDocument } from '../models/User'
 import type { OAuthConnection, OAuthState } from '../services/oauth'
+import { OAuthAction, OAuthProvider } from '@putongoj/shared'
 import { loadProfile } from '../middlewares/authn'
-import oauthService, { OAuthAction, OAuthProvider } from '../services/oauth'
+import oauthService from '../services/oauth'
 import sessionService from '../services/session'
 import { createEnvelopedResponse, createErrorResponse } from '../utils'
 import { ERR_BAD_PARAMS, ERR_NOT_FOUND } from '../utils/error'
@@ -89,7 +90,7 @@ export async function handleOAuthCallback (ctx: Context) {
     }
     user = connectedUser
     logger.info(`User <${user.uid}> login via ${provider} OAuth successfully [${requestId}]`)
-    sessionService.setUserSession(ctx, user)
+    sessionService.setSession(ctx, user)
   } else {
     ctx.throw(400, 'Unknown OAuth action')
   }

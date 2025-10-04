@@ -1,4 +1,5 @@
 <script>
+import Toast from 'primevue/toast'
 import { inject, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -71,5 +72,13 @@ watch(() => route.meta, () => changeDomTitle(route.meta))
 <template>
   <div id="app">
     <OjLayout />
+    <Toast group="global" />
   </div>
 </template>
+
+<style src="./styles/tailwind.css" />
+
+<style lang="stylus">
+html
+  font-size: 14px !important
+</style>
