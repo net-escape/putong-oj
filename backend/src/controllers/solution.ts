@@ -9,6 +9,7 @@ import { loadProfile } from '../middlewares/authn'
 import Contest from '../models/Contest'
 import Problem from '../models/Problem'
 import Solution from '../models/Solution'
+import { decryptData } from '../services/crypto'
 import { createEnvelopedResponse, createErrorResponse } from '../utils'
 import { judgeResult } from '../utils/constants'
 import { loadCourse } from './course'
@@ -79,9 +80,14 @@ const create = async (ctx: Context) => {
 
   const uid = profile.uid
   const pid = Number.parseInt(opt.pid)
-  const code = String(opt.code)
   const language = Number.parseInt(opt.language)
   const mid = Number.parseInt(opt.mid) || -1
+  let code = ''
+  try {
+    code = await decryptData(String(opt.code))
+  } catch {
+    ctx.throw(400, 'Failed to decrypt code')
+  }
 
   if (language < 0 || language > 6) {
     ctx.throw(400, 'Invalid language')

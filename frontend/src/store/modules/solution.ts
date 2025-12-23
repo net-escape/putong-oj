@@ -1,6 +1,7 @@
 import type { Solution } from '@/types'
 import { defineStore } from 'pinia'
 import api from '@/api'
+import { encryptData } from '@/utils/crypto'
 
 export const useSolutionStore = defineStore('solution', {
   state: () => ({
@@ -22,8 +23,8 @@ export const useSolutionStore = defineStore('solution', {
       }
       return data
     },
-    create (payload: { [key: string]: any }) {
-      return api.solution.create(payload)
+    async create (payload: { code: string, [key: string]: any }) {
+      return api.solution.create({ ...payload, code: await encryptData(payload.code) })
     },
     clearSavedSolution () {
       this.solution = { language: null, code: '' }

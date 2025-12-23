@@ -1,6 +1,7 @@
 import test from 'ava'
 import supertest from 'supertest'
 import app from '../../../src/app'
+import { encryptData } from '../../../src/services/crypto'
 
 const server = app.listen()
 const request = supertest.agent(server)
@@ -11,7 +12,7 @@ test('Can not create solution without login', async (t) => {
     .send({
       pid: 1000,
       language: 1,
-      code: 'Anything you like',
+      code: await encryptData('Anything you like'),
     })
 
   t.is(res.status, 401)

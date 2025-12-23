@@ -34,7 +34,7 @@ test.serial('Submit a solution', async (t) => {
     .send({
       pid: 1000,
       uid: 'primaryuser',
-      code,
+      code: await encryptData(code),
       language: 2, // cpp; TODO: as a constant
     })
 
