@@ -1,6 +1,6 @@
+import path from 'node:path'
 import test from 'ava'
 import fse from 'fs-extra'
-import path from 'node:path'
 import supertest from 'supertest'
 import app from '../../../src/app'
 import config from '../../../src/config'
@@ -62,10 +62,10 @@ test.serial('Create testcase - should succeed with valid input and output', asyn
   t.true(Array.isArray(res.body))
   t.is(res.body.length, 1)
   t.truthy(res.body[0].uuid)
-  
+
   // Store UUID for later tests
   testcaseUuid = res.body[0].uuid
-  
+
   // Verify the testcase files were created
   const testDir = path.resolve(__dirname, `../../../data/${testPid}`)
   t.true(fse.existsSync(path.resolve(testDir, `${testcaseUuid}.in`)))
@@ -174,11 +174,11 @@ test.serial('Remove testcase - should succeed with valid UUID', async (t) => {
   t.is(res.status, 200)
   t.true(Array.isArray(res.body))
   t.is(res.body.length, 2) // Should have 2 remaining testcases
-  
+
   // Verify the UUID is not in the returned list
   const uuids = res.body.map((tc: any) => tc.uuid)
   t.false(uuids.includes(testcaseUuid))
-  
+
   // Verify files still exist (they should not be deleted)
   const testDir = path.resolve(__dirname, `../../../data/${testPid}`)
   t.true(fse.existsSync(path.resolve(testDir, `${testcaseUuid}.in`)))
@@ -199,16 +199,16 @@ test.serial('Remove testcase - should fail with uppercase UUID', async (t) => {
   t.is(res.status, 400)
 })
 
-test.after.always('Cleanup', async (t) => {
+test.after.always('Cleanup', async (_t) => {
   // Clean up test problem and data directory
   if (testPid) {
     await request.delete(`/api/problem/${testPid}`)
-    
+
     const testDir = path.resolve(__dirname, `../../../data/${testPid}`)
     if (fse.existsSync(testDir)) {
       await fse.remove(testDir)
     }
   }
-  
+
   server.close()
 })
