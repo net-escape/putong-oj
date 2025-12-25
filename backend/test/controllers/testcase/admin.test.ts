@@ -46,8 +46,9 @@ test.serial('Find testcases - should return empty array initially', async (t) =>
     .get(`/api/problem/${testPid}/testcases`)
 
   t.is(res.status, 200)
-  t.true(Array.isArray(res.body))
-  t.is(res.body.length, 0)
+  t.true(res.body.success)
+  t.true(Array.isArray(res.body.data))
+  t.is(res.body.data.length, 0)
 })
 
 test.serial('Create testcase - should succeed with valid input and output', async (t) => {
@@ -59,12 +60,13 @@ test.serial('Create testcase - should succeed with valid input and output', asyn
     })
 
   t.is(res.status, 200)
-  t.true(Array.isArray(res.body))
-  t.is(res.body.length, 1)
-  t.truthy(res.body[0].uuid)
+  t.true(res.body.success)
+  t.true(Array.isArray(res.body.data))
+  t.is(res.body.data.length, 1)
+  t.truthy(res.body.data[0].uuid)
 
   // Store UUID for later tests
-  testcaseUuid = res.body[0].uuid
+  testcaseUuid = res.body.data[0].uuid
 
   // Verify the testcase files were created
   const testDir = path.resolve(__dirname, `../../../data/${testPid}`)
@@ -88,9 +90,10 @@ test.serial('Find testcases - should return created testcase', async (t) => {
     .get(`/api/problem/${testPid}/testcases`)
 
   t.is(res.status, 200)
-  t.true(Array.isArray(res.body))
-  t.is(res.body.length, 1)
-  t.is(res.body[0].uuid, testcaseUuid)
+  t.true(res.body.success)
+  t.true(Array.isArray(res.body.data))
+  t.is(res.body.data.length, 1)
+  t.is(res.body.data[0].uuid, testcaseUuid)
 })
 
 test.serial('Get testcase input file - should return input content', async (t) => {
@@ -154,7 +157,8 @@ test.serial('Create multiple testcases - should return all testcases', async (t)
     })
 
   t.is(res1.status, 200)
-  t.is(res1.body.length, 2)
+  t.true(res1.body.success)
+  t.is(res1.body.data.length, 2)
 
   const res2 = await request
     .post(`/api/problem/${testPid}/testcases`)
@@ -164,7 +168,8 @@ test.serial('Create multiple testcases - should return all testcases', async (t)
     })
 
   t.is(res2.status, 200)
-  t.is(res2.body.length, 3)
+  t.true(res2.body.success)
+  t.is(res2.body.data.length, 3)
 })
 
 test.serial('Remove testcase - should succeed with valid UUID', async (t) => {
@@ -172,11 +177,12 @@ test.serial('Remove testcase - should succeed with valid UUID', async (t) => {
     .delete(`/api/problem/${testPid}/testcases/${testcaseUuid}`)
 
   t.is(res.status, 200)
-  t.true(Array.isArray(res.body))
-  t.is(res.body.length, 2) // Should have 2 remaining testcases
+  t.true(res.body.success)
+  t.true(Array.isArray(res.body.data))
+  t.is(res.body.data.length, 2) // Should have 2 remaining testcases
 
   // Verify the UUID is not in the returned list
-  const uuids = res.body.map((tc: any) => tc.uuid)
+  const uuids = res.body.data.map((tc: any) => tc.uuid)
   t.false(uuids.includes(testcaseUuid))
 
   // Verify files still exist (they should not be deleted)
@@ -193,8 +199,10 @@ test.serial('Remove testcase - should fail with invalid UUID format', async (t) 
 })
 
 test.serial('Remove testcase - should fail with uppercase UUID', async (t) => {
+  // Try to remove with uppercase UUID (should fail validation)
+  const uppercaseUuid = '12345678-1234-1234-1234-123456789abc'.toUpperCase()
   const res = await request
-    .delete(`/api/problem/${testPid}/testcases/00000000-0000-0000-0000-000000000000`.toUpperCase())
+    .delete(`/api/problem/${testPid}/testcases/${uppercaseUuid}`)
 
   t.is(res.status, 400)
 })

@@ -1,13 +1,42 @@
 import test from 'ava'
 import supertest from 'supertest'
 import app from '../../../src/app'
+import config from '../../../src/config'
 import { encryptData } from '../../../src/services/crypto'
 
 const server = app.listen()
 const request = supertest.agent(server)
+const adminRequest = supertest.agent(server)
 
-// Use an existing problem from seeds (pid: 1000)
-const testPid = 1000
+let testPid: number | null = null
+
+test.before('Setup - login as admin and create test problem', async (t) => {
+  // Login as admin first
+  const adminLogin = await adminRequest
+    .post('/api/account/login')
+    .send({
+      username: 'admin',
+      password: await encryptData(config.deploy.adminInitPwd),
+    })
+
+  t.is(adminLogin.status, 200)
+
+  // Create a problem that regular user won't have access to
+  const create = await adminRequest
+    .post('/api/problem')
+    .send({
+      title: 'Test Problem for User Permission Tests',
+      description: 'A problem to test user permission denial',
+      input: 'Test input',
+      output: 'Test output',
+      in: '1',
+      out: '1',
+    })
+
+  t.is(create.status, 200)
+  t.truthy(create.body.pid)
+  testPid = create.body.pid
+})
 
 test.before('Login as regular user', async (t) => {
   const login = await request
@@ -61,6 +90,11 @@ test('Remove testcase - should be denied for non-admin/non-owner', async (t) => 
   t.is(res.status, 403)
 })
 
-test.after.always('close server', () => {
+test.after.always('Cleanup', async (_t) => {
+  // Clean up test problem
+  if (testPid) {
+    await adminRequest.delete(`/api/problem/${testPid}`)
+  }
+
   server.close()
 })
