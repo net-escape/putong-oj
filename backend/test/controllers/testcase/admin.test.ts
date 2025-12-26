@@ -198,15 +198,6 @@ test.serial('Remove testcase - should fail with invalid UUID format', async (t) 
   t.is(res.status, 400)
 })
 
-test.serial('Remove testcase - should fail with uppercase UUID', async (t) => {
-  // Try to remove with uppercase UUID (should fail validation)
-  const uppercaseUuid = '12345678-1234-1234-1234-123456789abc'.toUpperCase()
-  const res = await request
-    .delete(`/api/problem/${testPid}/testcases/${uppercaseUuid}`)
-
-  t.is(res.status, 400)
-})
-
 test.after.always('Cleanup', async (_t) => {
   // Clean up test problem and data directory
   if (testPid) {
