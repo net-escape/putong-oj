@@ -85,17 +85,7 @@ export async function loadContest (
     return contest
   }
 
-  // For public contests, auto-create participation
-  if (contest.encrypt === encrypt.Public) {
-    await contestParticipationService.createParticipation(
-      contest._id,
-      profile._id,
-    )
-    ctx.auditLog.info(`<User:${profile.uid}> entered contest <Contest:${contest.cid}>`)
-    ctx.state.contest = contest
-    return contest
-  }
-
+  // User is not participating - deny access
   return ctx.throw(...ERR_PERM_DENIED)
 }
 
@@ -413,7 +403,11 @@ const verifyParticipant = async (ctx: Context) => {
   const enc = contest.encrypt
   const arg = contest.argument
   let isVerify = false
-  if (enc === encrypt.Private) {
+  
+  if (enc === encrypt.Public) {
+    // Public contests can be joined by anyone
+    isVerify = true
+  } else if (enc === encrypt.Private) {
     const uid = profile.uid
     const arr = arg.split('\r\n')
     for (const item of arr) {
@@ -429,7 +423,7 @@ const verifyParticipant = async (ctx: Context) => {
         break
       }
     }
-  } else {
+  } else if (enc === encrypt.Password) {
     const pwd = opt.pwd
     if (arg === pwd) {
       isVerify = true
@@ -437,6 +431,7 @@ const verifyParticipant = async (ctx: Context) => {
       isVerify = false
     }
   }
+  
   if (isVerify) {
     await contestParticipationService.createParticipation(
       contest._id,
