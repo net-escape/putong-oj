@@ -137,3 +137,4 @@ dist
 
 # Editor directories and files
 .vscode/
+package-lock.json

@@ -14,7 +14,6 @@ export function setSession (ctx: Context, user: UserDocument): AccountSession {
     uid,
     privilege,
     checksum,
-    verifyContest: [],
   }
 
   ctx.session.profile = profile

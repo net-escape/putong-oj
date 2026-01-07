@@ -9,7 +9,6 @@ export const AccountSessionSchema = z.object({
   uid: UserModelSchema.shape.uid,
   privilege: UserModelSchema.shape.privilege,
   checksum: z.base64(),
-  verifyContest: z.array(z.number()).optional(),
 })
 
 export type AccountSession = z.infer<typeof AccountSessionSchema>
@@ -22,7 +21,6 @@ export const AccountProfileQueryResultSchema = z.object({
   motto: UserModelSchema.shape.motto,
   mail: UserModelSchema.shape.mail,
   school: UserModelSchema.shape.school,
-  verifyContest: AccountSessionSchema.shape.verifyContest,
 })
 
 export type AccountProfileQueryResult = z.input<typeof AccountProfileQueryResultSchema>

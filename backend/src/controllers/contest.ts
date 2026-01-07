@@ -2,7 +2,6 @@ import type { Context } from 'koa'
 import type { Types } from 'mongoose'
 import type { ContestDocumentPopulated } from '../models/Contest'
 import type { DiscussionQueryFilters } from '../services/discussion'
-import type { SessionProfile } from '../types'
 import { Buffer } from 'node:buffer'
 import { md5 } from '@noble/hashes/legacy.js'
 import {
@@ -21,6 +20,7 @@ import Group from '../models/Group'
 import Problem from '../models/Problem'
 import Solution from '../models/Solution'
 import contestService from '../services/contest'
+import contestParticipationService from '../services/contestParticipation'
 import discussionService from '../services/discussion'
 import solutionService from '../services/solution'
 import { getUser } from '../services/user'
@@ -75,22 +75,17 @@ export async function loadContest (
     return ctx.throw(400, 'This contest has not started yet')
   }
 
-  const session = ctx.session.profile as SessionProfile
-  if (!session.verifyContest) {
-    session.verifyContest = []
-  }
-  if (session.verifyContest.includes(contest.cid)) {
+  // Check participation from database
+  const isParticipant = await contestParticipationService.isParticipating(
+    contest._id,
+    profile._id,
+  )
+  if (isParticipant) {
     ctx.state.contest = contest
     return contest
   }
 
-  if (contest.encrypt === encrypt.Public) {
-    session.verifyContest.push(contest.cid)
-    ctx.auditLog.info(`<User:${profile.uid}> entered contest <Contest:${contest.cid}>`)
-    ctx.state.contest = contest
-    return contest
-  }
-
+  // User is not participating - deny access
   return ctx.throw(...ERR_PERM_DENIED)
 }
 
@@ -122,19 +117,71 @@ const findContests = async (ctx: Context) => {
 }
 
 const getContest = async (ctx: Context) => {
+  const contestId = Number(ctx.params.cid)
+  if (!Number.isInteger(contestId) || contestId <= 0) {
+    return ctx.throw(...ERR_INVALID_ID)
+  }
+
+  const contest = await contestService.getContest(contestId)
+  if (!contest) {
+    return ctx.throw(...ERR_NOT_FOUND)
+  }
+
   const profile = await loadProfile(ctx)
-  const contest = await loadContest(ctx)
+  
+  // Check if user is admin or has manage permissions
+  let courseRole = null
+  if (contest.course) {
+    const result = await loadCourse(ctx, contest.course)
+    courseRole = result.role
+    if (!courseRole.basic && !profile.isAdmin) {
+      return ctx.throw(...ERR_PERM_DENIED)
+    }
+  }
+  
   const canViewMore = await (async (): Promise<boolean> => {
     if (profile.isAdmin) {
       return true
     }
-    if (contest.course) {
-      const { role } = await loadCourse(ctx, contest.course)
-      return role.manageContest
+    if (courseRole) {
+      return courseRole.manageContest
     }
     return false
   })()
 
+  // Check if user is participating
+  const isParticipating = profile && profile._id
+    ? await contestParticipationService.isParticipating(contest._id, profile._id)
+    : false
+
+  // If contest hasn't started and user doesn't have manage permission, deny access
+  if (contest.start > Date.now() && !canViewMore) {
+    return ctx.throw(400, 'This contest has not started yet')
+  }
+
+  // Return basic contest info for non-participants
+  if (!isParticipating && !canViewMore) {
+    let course = null
+    if (contest.course && courseRole) {
+      course = {
+        ...pick(contest.course, [ 'courseId', 'name', 'description', 'encrypt' ]),
+        role: courseRole,
+      }
+    }
+    const contestData = pick(contest, [
+      'cid', 'title', 'start', 'end', 'encrypt', 'status', 'option' ])
+    ctx.body = {
+      contest: {
+        ...contestData,
+        course,
+      },
+      isParticipating: false,
+      requiresVerification: true,
+    }
+    return
+  }
+
+  // Full contest details for participants or admins
   const cid = contest.cid
   const problemList = contest.list
   const totalProblems = problemList.length
@@ -161,7 +208,7 @@ const getContest = async (ctx: Context) => {
     await redis.set(cacheKey, JSON.stringify(overview), 'EX', 10)
   }
 
-  const solved = profile
+  const solved = profile && profile.uid
     ? await Solution
         .find({
           mid: cid,
@@ -175,16 +222,16 @@ const getContest = async (ctx: Context) => {
     : []
 
   let course = null
-  if (contest.course) {
-    const { role } = await loadCourse(ctx, contest.course)
+  if (contest.course && courseRole) {
     course = {
       ...pick(contest.course, [ 'courseId', 'name', 'description', 'encrypt' ]),
-      role,
+      role: courseRole,
     }
   }
   const contestData = pick(contest, [
     'cid', 'title', 'start', 'end', 'encrypt', 'status', 'list', 'option' ])
   const argument = canViewMore ? contest.argument : undefined
+  ctx.state.contest = contest
   ctx.body = {
     contest: {
       ...contestData,
@@ -194,6 +241,7 @@ const getContest = async (ctx: Context) => {
     overview,
     totalProblems,
     solved,
+    isParticipating: true,
   }
 }
 
@@ -338,7 +386,6 @@ const verifyParticipant = async (ctx: Context) => {
   if (!Number.isInteger(cid) || cid <= 0) {
     return ctx.throw(400, 'Invalid contest ID')
   }
-  const session = ctx.session.profile as SessionProfile
   const profile = await loadProfile(ctx)
   const contest = await contestService.getContest(cid)
   if (!contest) {
@@ -354,7 +401,11 @@ const verifyParticipant = async (ctx: Context) => {
   const enc = contest.encrypt
   const arg = contest.argument
   let isVerify = false
-  if (enc === encrypt.Private) {
+  
+  if (enc === encrypt.Public) {
+    // Public contests can be joined by anyone
+    isVerify = true
+  } else if (enc === encrypt.Private) {
     const uid = profile.uid
     const arr = arg.split('\r\n')
     for (const item of arr) {
@@ -370,19 +421,23 @@ const verifyParticipant = async (ctx: Context) => {
         break
       }
     }
-  } else {
+  } else if (enc === encrypt.Password) {
     const pwd = opt.pwd
     if (arg === pwd) {
       isVerify = true
     } else {
       isVerify = false
     }
+  } else {
+    // Invalid encryption type
+    return ctx.throw(400, 'Invalid contest encryption type')
   }
-  if (!session.verifyContest) {
-    session.verifyContest = []
-  }
+  
   if (isVerify) {
-    session.verifyContest.push(contest.cid)
+    await contestParticipationService.createParticipation(
+      contest._id,
+      profile._id,
+    )
     ctx.auditLog.info(`<User:${profile.uid}> entered contest <Contest:${contest.cid}>`)
   }
   ctx.body = {
@@ -391,7 +446,6 @@ const verifyParticipant = async (ctx: Context) => {
       uid: profile.uid,
       nick: profile.nick,
       privilege: profile.privilege,
-      verifyContest: session.verifyContest,
     },
   }
 }

@@ -18,7 +18,6 @@ export interface SessionProfile {
   uid: string
   privilege: number
   checksum: string
-  verifyContest?: number[]
 }
 
 export interface PaginateOption {
