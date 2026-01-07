@@ -10,7 +10,6 @@ contestRouter.get('/list',
   contestController.findContests,
 )
 contestRouter.get('/:cid',
-  authnMiddleware.loginRequire,
   contestController.getContest,
 )
 contestRouter.get('/:cid/ranklist',

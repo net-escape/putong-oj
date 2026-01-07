@@ -90,6 +90,11 @@ export const tagColors = Object.freeze([
   'magenta',
 ] as const)
 
+export const participationStatus = Object.freeze({
+  Active: 1,
+  Inactive: 0,
+})
+
 export default Object.freeze({
   deploy,
   encrypt,
@@ -102,4 +107,5 @@ export default Object.freeze({
   courseRoleEntire,
   contestLabelingStyle,
   tagColors,
+  participationStatus,
 })
