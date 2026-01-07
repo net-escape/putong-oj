@@ -130,43 +130,42 @@ const getContest = async (ctx: Context) => {
   const profile = await loadProfile(ctx)
   
   // Check if user is admin or has manage permissions
+  let courseRole = null
+  if (contest.course) {
+    const result = await loadCourse(ctx, contest.course)
+    courseRole = result.role
+    if (!courseRole.basic && !profile.isAdmin) {
+      return ctx.throw(...ERR_PERM_DENIED)
+    }
+  }
+  
   const canViewMore = await (async (): Promise<boolean> => {
     if (profile.isAdmin) {
       return true
     }
-    if (contest.course) {
-      const { role } = await loadCourse(ctx, contest.course)
-      return role.manageContest
+    if (courseRole) {
+      return courseRole.manageContest
     }
     return false
   })()
 
   // Check if user is participating
-  const isParticipating = profile
+  const isParticipating = profile && profile._id
     ? await contestParticipationService.isParticipating(contest._id, profile._id)
     : false
-
-  // For course contests, check basic access
-  if (contest.course) {
-    const { role } = await loadCourse(ctx, contest.course)
-    if (!role.basic && !profile.isAdmin) {
-      return ctx.throw(...ERR_PERM_DENIED)
-    }
-  }
 
   // If contest hasn't started and user doesn't have manage permission, deny access
   if (contest.start > Date.now() && !canViewMore) {
     return ctx.throw(400, 'This contest has not started yet')
   }
 
-  // Return basic contest info for non-participants (except public contests)
+  // Return basic contest info for non-participants
   if (!isParticipating && !canViewMore) {
     let course = null
-    if (contest.course) {
-      const { role } = await loadCourse(ctx, contest.course)
+    if (contest.course && courseRole) {
       course = {
         ...pick(contest.course, [ 'courseId', 'name', 'description', 'encrypt' ]),
-        role,
+        role: courseRole,
       }
     }
     const contestData = pick(contest, [
@@ -209,7 +208,7 @@ const getContest = async (ctx: Context) => {
     await redis.set(cacheKey, JSON.stringify(overview), 'EX', 10)
   }
 
-  const solved = profile
+  const solved = profile && profile.uid
     ? await Solution
         .find({
           mid: cid,
@@ -223,11 +222,10 @@ const getContest = async (ctx: Context) => {
     : []
 
   let course = null
-  if (contest.course) {
-    const { role } = await loadCourse(ctx, contest.course)
+  if (contest.course && courseRole) {
     course = {
       ...pick(contest.course, [ 'courseId', 'name', 'description', 'encrypt' ]),
-      role,
+      role: courseRole,
     }
   }
   const contestData = pick(contest, [
@@ -430,6 +428,9 @@ const verifyParticipant = async (ctx: Context) => {
     } else {
       isVerify = false
     }
+  } else {
+    // Invalid encryption type
+    return ctx.throw(400, 'Invalid contest encryption type')
   }
   
   if (isVerify) {

@@ -38,7 +38,7 @@ watch(() => props.contest, (contest) => {
 async function handleVerify () {
   loading.value = true
   try {
-    const payload: any = { cid: props.contest.cid }
+    const payload: { cid: number, pwd?: string } = { cid: props.contest.cid }
     if (isPasswordProtected.value) {
       if (!password.value) {
         message.error(t('ptoj.password_required'))
