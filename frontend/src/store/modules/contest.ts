@@ -11,6 +11,8 @@ export const useContestStore = defineStore('contest', {
     overview: [] as { title: string, pid: number, invalid?: boolean, submit: number, solve: number }[],
     totalProblems: 0,
     solved: [] as any[],
+    isParticipating: false,
+    requiresVerification: false,
   }),
   getters: {
     contestId (state): number {
@@ -61,9 +63,11 @@ export const useContestStore = defineStore('contest', {
     async findOne (payload: { [key: string]: any }): Promise<ContestEntityView> {
       const { data } = await api.contest.findOne(payload)
       this.contest = data.contest
-      this.overview = data.overview
-      this.totalProblems = data.totalProblems
-      this.solved = data.solved
+      this.overview = data.overview || []
+      this.totalProblems = data.totalProblems || 0
+      this.solved = data.solved || []
+      this.isParticipating = data.isParticipating !== false
+      this.requiresVerification = data.requiresVerification === true
       return data
     },
     async create (payload: { [key: string]: any }): Promise<number> {
